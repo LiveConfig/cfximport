@@ -32,7 +32,7 @@
    * Eine "in-place"-Migration wird ausdruecklich NICHT empfohlen ! ! !
    *
    * --------------------------------------------------------------------------
-   * Migrations-Tool zum Umzug der Benutzerdaten von Confixx® zu LiveConfig®
+   * Migrations-Tool zum Umzug der Benutzerdaten von Confixx zu LiveConfig®
    * --------------------------------------------------------------------------
    * Die neueste Version dieser Software sowie eine ausfuehrliche Anleitung
    * finden Sie unter
@@ -115,8 +115,6 @@
    *   php cfximport.php res1 --all
    *
    * --------------------------------------------------------------------------
-   * "Confixx" ist eine eingetragene Marke der SWsoft Holdings Ltd.
-   * (n.d.Ges.d. Staates Bermuda), Herndon Va., US
    * "LiveConfig" ist eine eingetragene Marke der Keppler IT GmbH, Erlangen, DE
    * --------------------------------------------------------------------------
    */
@@ -486,6 +484,10 @@
       $sql = "SELECT * FROM kunden WHERE anbieter='" . mysql_real_escape_string($anbieter['anbieter']) . "'";
       if (isset($kunde['kunde'])) {
         $sql .= " AND kunde='" . mysql_real_escape_string($kunde['kunde']) . "'";
+      } elseif (!$OPTS['all']) {
+        # kein Kunde gewählt und Option "--all" nicht gesetzt: abbrechen (in diesem Fall sollte
+        # wohl nur der Reseller importiert werden)
+        break;
       }
       if (!$OPTS['importlocked']) {
         $sql .= " AND gesperrt=0";
