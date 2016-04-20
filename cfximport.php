@@ -119,6 +119,10 @@
    * --------------------------------------------------------------------------
    */
 
+  # OPTIONAL: WSDL-Caching deaktivieren (nur wenn sich im WSDL während des Imports
+  # etwas geändert hat, z.B. nach einem LiveConfig-Update)
+  # ini_set("soap.wsdl_cache_enabled", "0");
+
   $CONFIG           = array();
   $CFX_CONFIG       = array();
   $CONFIG_FILE      = "cfximport.conf";
@@ -1129,7 +1133,6 @@
 
     # Verbindung zum LiveConfig Server herstellen
     print "Verbindung zum LiveConfig-Server ... ";
-    ini_set("soap.wsdl_cache_enabled", "0");
     # WSDL URL erstellen
     $wsdl_url = $CONFIG['url']
            .'?wsdl'
