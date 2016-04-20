@@ -86,6 +86,7 @@
    *                   Quota wird so angepasst, dass alle Postfaecher importiert
    *                   werden koennen)
    * --verbose         Ausfuehrlichere Informationen waehrend des Imports ausgeben
+   * --ignore=<Liste>  ignoriere die angegebenen Vertragsnamen (Komma-getrennt)
    *
    * DEBUG=1 schaltet zusaetzliche Debugausgaben an
    *
@@ -133,7 +134,7 @@
   }
 
   # Parsen der angegebenen Optionen und Parameter
-  $OPTS = parseParameters(array('h', 'help', 'check', 'c', 'config', 'a', 'all', 'i', 'importlocked', 'importplans', 'kdnr', 'fixmailquota', 'verbose'));
+  $OPTS = parseParameters(array('h', 'help', 'check', 'c', 'config', 'a', 'all', 'i', 'importlocked', 'importplans', 'kdnr', 'fixmailquota', 'verbose', 'ignore'));
   $action = 'import';
 
   foreach ($OPTS as $key => $value) {
@@ -496,6 +497,8 @@
       while ($result = mysql_fetch_assoc($result_query)) {
         # Testen, ob es schon einen Vertrag fuer den $result['kunden'] gibt
         $subscriptionname = $result['kunde'];
+
+        if (isset($OPTS['ignore']) && in_array($subscriptionname, split(',', $OPTS['ignore']))) continue;
 
         # BEISPIEL: basieren auf Kundennummer automatisch setzen:
         # $subscriptionname = 'k' . $result['kundennummer'];
@@ -1471,6 +1474,7 @@ Verwendung: php cfximport.php -c | -h | --check
                     Quota wird so angepasst, dass alle Postfaecher importiert
                     werden koennen)
   --verbose         Ausfuehrlichere Informationen waehrend des Imports ausgeben
+  --ignore=<Liste>  ignoriere die angegebenen Vertragsnamen (Komma-getrennt)
 
 ANLEITUNG UND NEUESTE VERSION: http://www.liveconfig.com/de/kb/5
 ______________________________________________________________________________
