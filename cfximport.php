@@ -780,6 +780,10 @@
               if (isset($row['emailbetreff'])) {
                 $fwd['autoresponder'] = 1;
                 $fwd['autosubject']   = $row['emailbetreff'];
+                if ($fwd['autosubject'] == '') {
+                  # ab LiveConfig 2.2.0: leeren Betreff durch "Re: ${subject}" ersetzen
+                  $fwd['autosubject'] = 'Re: ${subject}';
+                }
                 # "emailtext" ist eine BLOB-Spalte -> daher manuell in UTF8 konvertieren!
                 $fwd['automessage']   = utf8_encode($row['emailtext']);
               } else {
