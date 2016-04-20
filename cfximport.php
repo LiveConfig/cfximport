@@ -5,11 +5,10 @@
    * | |__| \ V / -_) (__/ _ \ ' \|  _| / _` |
    * |____|_|\_/\___|\___\___/_||_|_| |_\__, |
    *                                    |___/
-   * $Id: cfximport.php 128 2013-11-14 16:04:12Z kk $
    * @package cfximport
    * @author Keppler IT GmbH <info@liveconfig.com>
-   * @copyright Copyright (c) 2009-2013 Keppler IT GmbH.
-   * @version 1.8
+   * @copyright Copyright (c) 2009-2016 Keppler IT GmbH.
+   * @version 1.9
    * --------------------------------------------------------------------------
    * DIESE SOFTWARE WIRD "WIE SIE IST" UND AUSDRUECKLICH OHNE JEGLICHE
    * EXPLIZITE ODER IMPLIZITE ZUSICHERUNGEN BEZUEGLICH IHRER FUNKTION,
