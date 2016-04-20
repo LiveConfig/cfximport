@@ -745,7 +745,7 @@
               $mbox['mailbox']        = 1;
               $mbox['password']       = $row['longpw'];
               $mbox['quota']          = $row['maxkb'] / 1024;
-              if ($mbox['quota'] == 0) $mbox['quota'] = $OPTS['defaultmailquota'];
+              if ($mbox['quota'] == 0) $mbox['quota'] = $OPTS['defaultmailquota'] / 1024;
               $mbox['autoresponder']  = 0;
               $mbox['auth']           = createToken('HostingMailboxAdd', $rcustomer_id);
               # ---------------------------------
