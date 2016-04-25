@@ -605,7 +605,8 @@
               # auf eigenem DNS anlegen
               $d_data['dnstemplate'] = $OPTS['dnstemplate'];
               if (isset($row['lastchange'])) {
-                $d_data['serial'] = $row['lastchange'];
+                $d_data['serial'] = date('Ymd') . '01';
+                if ($d_data['serial'] <= $row['lastchange']) $d_data['serial'] = $row['lastchange'] + 1;
               }
             }
             # -----------------------------
