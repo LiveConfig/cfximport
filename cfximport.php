@@ -753,7 +753,12 @@
           #############################
           if ($stddomain != NULL) {
             # alle POP3-Postfächer auslesen und anlegen:
-            $sql = "SELECT account, longpw, maxkb FROM pop3 WHERE kunde='" . $result['kunde'] . "'";
+            # $sql = "SELECT account, longpw, maxkb, spamfilter FROM pop3 WHERE kunde='" . $result['kunde'] . "'";
+            $sql = "SELECT account, longpw, maxkb, spamfilter, sp1.value AS spam_level, sp2.value AS spam_prefix "
+                  ."FROM pop3 "
+                  ."LEFT JOIN spampref sp1 on (pop3.account=sp1.username AND sp1.preference='required_score') "
+                  ."LEFT JOIN spampref sp2 on (pop3.account=sp2.username AND sp2.preference='rewrite_header') "
+                  ."WHERE kunde='" . $result['kunde'] . "'";
             $res = mysql_query($sql);
             while ($row = mysql_fetch_assoc($res)) {
               $mbox['subscription']   = $subscriptionname;
@@ -764,6 +769,17 @@
               $mbox['quota']          = $row['maxkb'] / 1024;
               if ($mbox['quota'] == 0) $mbox['quota'] = $OPTS['defaultmailquota'] / 1024;
               $mbox['autoresponder']  = 0;
+              if (isset($row['spam_level']) && $row['spam_level'] > 0) {
+                # Spam-Filter aktivieren
+                $mbox['spamfilter'] = 1;
+                $mbox['spamwarn'] = $row['spam_level'];
+                $mbox['spamreject'] = 999;
+                if (isset($row['spam_prefix'])) {
+                  if (preg_match('/^subject (.*)/', $row['spam_prefix'], $matches) > 0) {
+                    if (isset($matches[1]) && $matches[1] != '') $mbox['spamprefix'] = $matches[1];
+                  }
+                }
+              }
               $mbox['auth']           = createToken('HostingMailboxAdd', $rcustomer_id);
               # ---------------------------------
               # SOAP-Aufruf HostingMailboxAdd()
