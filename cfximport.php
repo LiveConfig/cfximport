@@ -188,6 +188,7 @@
   if (!isset($OPTS['kdnr'])) $OPTS['kdnr'] = false;
   if (!isset($OPTS['fixmailquota'])) $OPTS['fixmailquota'] = false;
   if (!isset($OPTS['verbose'])) $OPTS['verbose'] = false;
+  if (!isset($OPTS['dnstemplate'])) $OPTS['dnstemplate'] = 'Standard';
   $OPTS['defaultmailquota'] = -1;   # falls kein Mailquota beim Anbieter gesetzt ist
 
   # Ab hier erfolgt die Unterscheidung, welche Aktion durchgefuehrt werden soll
@@ -588,7 +589,9 @@
           ###########################
           
           # Alle Domains auslesen fuer diesen Kunden
-          $sql = "SELECT domain, pfad, richtigedomain, kunde FROM domains WHERE kunde='".$result['kunde']."' AND richtigedomain = 1";
+          $sql = "SELECT domains.domain, pfad, richtigedomain, domains.kunde, domains.dns, dns.lastchange "
+                ."FROM domains LEFT JOIN dns ON (domains.domain=dns.domain AND domains.kunde=dns.kunde) "
+                ."WHERE domains.kunde='".$result['kunde']."' AND richtigedomain = 1";
           $res = mysql_query($sql) or die("Anfrage 'Domains des Kunden' nicht erfolgreich");
           $stddomain = NULL;
           while ($row = mysql_fetch_array($res)){
@@ -598,6 +601,13 @@
             $d_data['mail']=1;
             $d_data['web']=$row['pfad'];
             $d_data['auth']=createToken('HostingDomainAdd',$rcustomer_id);
+            if ($row['dns'] == 1) {
+              # auf eigenem DNS anlegen
+              $d_data['dnstemplate'] = $OPTS['dnstemplate'];
+              if (isset($row['lastchange'])) {
+                $d_data['serial'] = $row['lastchange'];
+              }
+            }
             # -----------------------------
             # Soapaufruf HostingDomainAdd
             # -----------------------------
