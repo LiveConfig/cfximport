@@ -85,6 +85,11 @@
    * --fixmailquota    ueberbuchte Mailbox-Quota beruecksichtigen (die neue Mail-
    *                   Quota wird so angepasst, dass alle Postfaecher importiert
    *                   werden koennen)
+   * --mergemailaddr   Wenn ein Confixx-Postfach mit genau *einer* darauf
+   *                   konfigurierten E-Mail-Adresse importiert wird, dann soll
+   *                   LiveConfig keine separate E-Mail-Weiterleitung anlegen,
+   *                   sondern die E-Mail-Adresse als "Alias" zum Postfach
+   *                   hinzufügen
    * --verbose         Ausfuehrlichere Informationen waehrend des Imports ausgeben
    * --ignore=<Liste>  ignoriere die angegebenen Vertragsnamen (Komma-getrennt)
    *
@@ -138,7 +143,7 @@
   }
 
   # Parsen der angegebenen Optionen und Parameter
-  $OPTS = parseParameters(array('h', 'help', 'check', 'c', 'config', 'a', 'all', 'i', 'importlocked', 'importplans', 'kdnr', 'fixmailquota', 'verbose', 'ignore'));
+  $OPTS = parseParameters(array('h', 'help', 'check', 'c', 'config', 'a', 'all', 'i', 'importlocked', 'importplans', 'kdnr', 'fixmailquota', 'mergemailaddr', 'verbose', 'ignore'));
   $action = 'import';
 
   foreach ($OPTS as $key => $value) {
@@ -187,6 +192,7 @@
   if (!isset($OPTS['htdocs'])) $OPTS['htdocs'] = 'htdocs';
   if (!isset($OPTS['kdnr'])) $OPTS['kdnr'] = false;
   if (!isset($OPTS['fixmailquota'])) $OPTS['fixmailquota'] = false;
+  if (!isset($OPTS['mergemailaddr'])) $OPTS['mergemailaddr'] = false;
   if (!isset($OPTS['verbose'])) $OPTS['verbose'] = false;
   if (!isset($OPTS['dnstemplate'])) $OPTS['dnstemplate'] = 'Standard';
   $OPTS['defaultmailquota'] = -1;   # falls kein Mailquota beim Anbieter gesetzt ist
@@ -752,6 +758,7 @@
           # Postfaecher einrichten
           #############################
           if ($stddomain != NULL) {
+            $MERGED = array();
             # alle POP3-Postfächer auslesen und anlegen:
             # $sql = "SELECT account, longpw, maxkb, spamfilter FROM pop3 WHERE kunde='" . $result['kunde'] . "'";
             $sql = "SELECT account, longpw, maxkb, spamfilter, sp1.value AS spam_level, sp2.value AS spam_prefix "
@@ -761,6 +768,7 @@
                   ."WHERE kunde='" . $result['kunde'] . "'";
             $res = mysql_query($sql);
             while ($row = mysql_fetch_assoc($res)) {
+              $mbox = array();
               $mbox['subscription']   = $subscriptionname;
               $mbox['name']           = $row['account'];
               $mbox['domain']         = $stddomain;
@@ -779,6 +787,36 @@
                     if (isset($matches[1]) && $matches[1] != '') $mbox['spamprefix'] = $matches[1];
                   }
                 }
+              }
+              if ($OPTS['mergemailaddr']) {
+                # prüfen, ob es nur genau eine E-Mail-Adresse gibt, welche auf dieses
+                # Postfach verweist. Wenn ja, dann dessen Domain verwenden, und den "localpart"
+                # der E-Mail-Adresse als Alias ins Postfach aufnehmen:
+                $sql = "SELECT email.ident, email.prefix, email.domain, autoresponder.emailbetreff, autoresponder.emailtext, "
+                      ."  (SELECT COUNT(*) FROM email_forward WHERE email_forward.pop3='" . $row['account'] . "' and email_forward.kunde='" . $result['kunde'] . "') AS addrcount "
+                      ."FROM email_forward, email LEFT JOIN autoresponder on (email.ident=autoresponder.ident) "
+                      ."WHERE email_forward.pop3='" . $row['account'] . "' and email_forward.kunde='" . $result['kunde'] . "' "
+                      ."AND email_forward.email_ident = email.ident";
+                $res2 = mysql_query($sql);
+                while ($row2 = mysql_fetch_assoc($res2)) {
+                  if ($row2['addrcount'] <> 1) break;  # mehr oder weniger als 1 Adresse konfiguriert
+                  # genau eine E-Mail-Adresse definiert -> zusammenfassen:
+                  $mbox['domain'] = $row2['domain'];
+                  $mbox['alias'] = array($row2['prefix']);
+                  if (isset($row2['emailbetreff'])) {
+                    $mbox['autoresponder'] = 1;
+                    $mbox['autosubject']   = $row2['emailbetreff'];
+                    if ($mbox['autosubject'] == '') {
+                      # ab LiveConfig 2.2.0: leeren Betreff durch "Re: ${subject}" ersetzen
+                      $mbox['autosubject'] = 'Re: ${subject}';
+                    }
+                    # "emailtext" ist eine BLOB-Spalte -> daher manuell in UTF8 konvertieren!
+                    $mbox['automessage']   = utf8_encode($row2['emailtext']);
+                  }
+                  array_push($MERGED, $row2['ident']);
+                  break;
+                }
+                mysql_free_result($res2);
               }
               $mbox['auth']           = createToken('HostingMailboxAdd', $rcustomer_id);
               # ---------------------------------
@@ -806,6 +844,7 @@
                   ."WHERE email.kunde='" . $result['kunde'] . "'";
             $res = mysql_query($sql);
             while ($row = mysql_fetch_assoc($res)) {
+              if ($OPTS['mergemailaddr'] && in_array($row['ident'], $MERGED)) continue;
               $fwd = array();
               $fwd['subscription']    = $subscriptionname;
               $fwd['name']            = $row['prefix'];
@@ -1503,12 +1542,17 @@ Verwendung: php cfximport.php -c | -h | --check
   --fixmailquota    ueberbuchte Mailbox-Quota beruecksichtigen (die neue Mail-
                     Quota wird so angepasst, dass alle Postfaecher importiert
                     werden koennen)
+  --mergemailaddr   Wenn ein Confixx-Postfach mit genau *einer* darauf
+                    konfigurierten E-Mail-Adresse importiert wird, dann soll
+                    LiveConfig keine separate E-Mail-Weiterleitung anlegen,
+                    sondern die E-Mail-Adresse als "Alias" zum Postfach
+                    hinzufügen
   --verbose         Ausfuehrlichere Informationen waehrend des Imports ausgeben
   --ignore=<Liste>  ignoriere die angegebenen Vertragsnamen (Komma-getrennt)
 
-ANLEITUNG UND NEUESTE VERSION: http://www.liveconfig.com/de/kb/5
+ANLEITUNG UND NEUESTE VERSION: https://github.com/LiveConfig/cfximport
 ______________________________________________________________________________
-Copyright (c) 2009-2013 Keppler IT GmbH.             http://www.liveconfig.com
+Copyright (c) 2009-2016 Keppler IT GmbH.             http://www.liveconfig.com
 
 EOT;
 # '
