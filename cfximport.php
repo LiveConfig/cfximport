@@ -426,7 +426,7 @@
             $response = $client->HostingSubscriptionAdd($hostingpaket);
           } catch(SoapFault $soapFault) {
             _traceSoapException();
-            die("Fehler beim aufruf von HostingSubscriptionAdd(): " . $soapFault->faultstring . "\n");
+            die("Fehler beim Aufruf von HostingSubscriptionAdd(): " . $soapFault->faultstring . "\n");
           }
 
           # Diese ID wird fuer das spaetere Anlegen des Kunden benoetigt
