@@ -422,7 +422,12 @@
 
           # Reseller-Vertrag anlegen:
           $hostingpaket['auth'] = createToken('HostingSubscriptionAdd');
-          $response = $client->HostingSubscriptionAdd($hostingpaket);
+          try {
+            $response = $client->HostingSubscriptionAdd($hostingpaket);
+          } catch (SoapFault $soapFault) {
+            _traceSoapException();
+            die("Fehler beim Aufruf von HostingSubscriptionAdd(): " . $soapFault->faultstring . "\n");
+          }
 
           # Diese ID wird fuer das spaetere Anlegen des Kunden benoetigt
           $contract_id = $response->id;
@@ -585,7 +590,13 @@
           }
 
           $hostingpaket['auth'] = createToken('HostingSubscriptionAdd', $rcustomer_id);
-          $response = $client->HostingSubscriptionAdd($hostingpaket);
+          try {
+            $response = $client->HostingSubscriptionAdd($hostingpaket);
+          } catch (SoapFault $soapFault) {
+            _traceSoapException();
+            die("Fehler beim Aufruf von HostingSubscriptionAdd(): " . $soapFault->faultstring . "\n");
+          }
+
           $subscriptionid = $response->id;
           logprint("Subscription-ID: $subscriptionid");
           print "\tVertrag angelegt (Owner: $newreseller, Angebot: " . (isset($hostingpaket['plan']) ? $hostingpaket['plan'] : '-individuell-') . ")\n";
