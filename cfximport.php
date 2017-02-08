@@ -884,7 +884,14 @@
                   # lokales Postfach: Standard-Domain anfügen
                   $addr .= '@' . $stddomain;
                 }
-                array_push($dest, $addr);
+                # Confixx erlaubt Weiterleitungsziele im Format "Name <name@example.com>", LC nicht
+                elseif( preg_match('/.*<(.+)>$/', $addr, $addr_matches) === 1 ){
+                  $addr = $addr_matches[1];
+                }
+                # Confixx erlaubt scheinbar doppelte Ziele. LC nicht. Also entferne Duplikate:
+                if( ! in_array($addr, $dest) ){
+                  array_push($dest, $addr);
+                }
               }
               mysql_free_result($res2);
               if (count($dest) == 0) continue;
