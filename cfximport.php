@@ -90,6 +90,8 @@
    *                   LiveConfig keine separate E-Mail-Weiterleitung anlegen,
    *                   sondern die E-Mail-Adresse als "Alias" zum Postfach
    *                   hinzufügen
+   * --php=<modus>     Benutze <modus> als Standard-Einstellung für den PHP Modus.
+   *                   Entweder suphp, fcgi oder modphp, default: suphp
    * --verbose         Ausfuehrlichere Informationen waehrend des Imports ausgeben
    * --ignore=<Liste>  ignoriere die angegebenen Vertragsnamen (Komma-getrennt)
    *
@@ -143,7 +145,7 @@
   }
 
   # Parsen der angegebenen Optionen und Parameter
-  $OPTS = parseParameters(array('h', 'help', 'check', 'c', 'config', 'a', 'all', 'i', 'importlocked', 'importplans', 'kdnr', 'fixmailquota', 'mergemailaddr', 'verbose', 'ignore'));
+  $OPTS = parseParameters(array('h', 'help', 'check', 'c', 'config', 'a', 'all', 'i', 'importlocked', 'importplans', 'kdnr', 'fixmailquota', 'mergemailaddr', 'php', 'verbose', 'ignore'));
   $action = 'import';
 
   foreach ($OPTS as $key => $value) {
@@ -196,6 +198,26 @@
   if (!isset($OPTS['verbose'])) $OPTS['verbose'] = false;
   if (!isset($OPTS['dnstemplate'])) $OPTS['dnstemplate'] = 'Standard';
   $OPTS['defaultmailquota'] = -1;   # falls kein Mailquota beim Anbieter gesetzt ist
+
+  if (!isset($OPTS['php'])) {
+    $OPTS['php'] = 1; # 1 == suphp, current default
+  }
+  else {
+    switch ($OPTS['php']) {
+      default:
+      case 'suphp':
+        $OPTS['php'] = 1;
+        break;
+
+      case 'fcgi':
+        $OPTS['php'] = 2;
+        break;
+
+      case 'modphp':
+        $OPTS['php'] = 3;
+        break;
+    }
+  }
 
   # Ab hier erfolgt die Unterscheidung, welche Aktion durchgefuehrt werden soll
 
@@ -419,6 +441,9 @@
               $hostingpaket['subscriptionname'] = $tmp;
             }
           }
+          if( $hostingpaket['php'] > 0 ){
+            $hostingpaket['php'] = $OPTS['php'];
+          }
 
           # Reseller-Vertrag anlegen:
           $hostingpaket['auth'] = createToken('HostingSubscriptionAdd');
@@ -461,6 +486,9 @@
             continue;
           } else {
             $data = _setHostingPlanAddData($angebot);
+            if( $data['php'] > 0 ) {
+              $data['php'] = $OPTS['php'];
+            }
             $data['auth']=createToken('HostingPlanAdd',$rcustomer_id);
             $response = $client->HostingPlanAdd($data);
             $hosting_id = $response->id;
@@ -589,6 +617,9 @@
             $hostingpaket['webstats'] = 2;    # AWStats einrichten
           }
 
+          if( $hostingpaket['php'] > 0 ) {
+            $hostingpaket['php'] = $OPTS['php'];
+          }
           $hostingpaket['auth'] = createToken('HostingSubscriptionAdd', $rcustomer_id);
           try {
             $response = $client->HostingSubscriptionAdd($hostingpaket);
@@ -1495,7 +1526,10 @@
                 'cronjobs'    => $angebot['maxcronjobs'],
                 'maxusers'    => 1
                 );
-
+    
+    if($paket_data['php'] > 0){
+      $paket_data['php'] = $OPTS['php'];
+    }
     return($paket_data);
   } #_setHostingPlanAddData
 
@@ -1558,6 +1592,8 @@ Verwendung: php cfximport.php -c | -h | --check
                     LiveConfig keine separate E-Mail-Weiterleitung anlegen,
                     sondern die E-Mail-Adresse als "Alias" zum Postfach
                     hinzufügen
+  --php=<modus>     Benutze <modus> als Standard-Einstellung für den PHP Modus.
+                    Entweder suphp, fcgi oder modphp, default: suphp
   --verbose         Ausfuehrlichere Informationen waehrend des Imports ausgeben
   --ignore=<Liste>  ignoriere die angegebenen Vertragsnamen (Komma-getrennt)
 
