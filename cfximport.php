@@ -915,7 +915,16 @@
                   # lokales Postfach: Standard-Domain anfügen
                   $addr .= '@' . $stddomain;
                 }
-                array_push($dest, $addr);
+                # Confixx erlaubt Weiterleitungsziele im Format "Name <name@example.com>", LC nicht
+                elseif( preg_match('/.*<(.+)>$/', $addr, $addr_matches) === 1 ){
+                  $addr = $addr_matches[1];
+                }
+                # Confixx erlaubt nicht standard-konforme Zeichen wie z.B. Leerzeichen und Tabulatoren, filtere diese
+                $addr = filter_var($addr, FILTER_SANITIZE_EMAIL);
+                # Confixx erlaubt scheinbar doppelte Ziele. LC nicht. Also entferne Duplikate:
+                if( ! in_array($addr, $dest) ){
+                  array_push($dest, $addr);
+                }
               }
               mysql_free_result($res2);
               if (count($dest) == 0) continue;
@@ -1386,6 +1395,8 @@
 
     # Kontakt anlegen:
     $contact_data = _setContactAddData($custdata);
+    # Confixx erlaubt nicht standard-konforme Zeichen wie z.B. Leerzeichen und Tabulatoren, filtere diese
+    $contact_data['email'] = filter_var($contact_data['email'], FILTER_SANITIZE_EMAIL);
     try {
       $contact_data['auth'] = createToken('ContactAdd', $cust_id);
       $response = $client->ContactAdd($contact_data);
