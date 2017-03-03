@@ -1794,11 +1794,12 @@ Bitte ueberpruefen Sie Ihre Angaben:
 
 EOT;
 # '
+    $finish_config = false;
     while (1) {      
       print "Sind diese Angaben richtig?\nBitte bestaetigen Sie oder kehren Sie zur Konfiguration zurueck! ['j,y,yes,n,no'] <y>";
       $confirm = trim(fgets(STDIN));
       if ($confirm == ''||$confirm == 'j'||$confirm == 'y' ||$confirm == 'yes') {
-        $finish_config = 1;
+        $finish_config = true;
         print "OK, dann koennen Sie  mit dem Import beginnen!\n";
         break;
       } elseif ($confirm == 'n'||$confirm == 'no') {
@@ -1806,7 +1807,7 @@ EOT;
         break;
       }
     }
-    if ($finish_config == 1) {
+    if ($finish_config) {
       # Schreiben der Configdaten in die Config-Datei
       _write_config($config, $config_file);
     }
