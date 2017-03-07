@@ -1501,6 +1501,7 @@
   # Setzt die Daten fuer das Anlegen eines HostingPlans
   #-----------------------------------------------------
   function _setHostingPlanAddData($angebot) {
+    global $OPTS;
 
     # Testen ob keine, bash oder scp als shell erlaubt ist
     if ($angebot['shell'] == 0) {
