@@ -617,7 +617,7 @@
             $hostingpaket['webstats'] = 2;    # AWStats einrichten
           }
 
-          if( $hostingpaket['php'] > 0 ) {
+          if( isset($hostingpaket['php']) AND $hostingpaket['php'] > 0 ) {
             $hostingpaket['php'] = $OPTS['php'];
           }
           $hostingpaket['auth'] = createToken('HostingSubscriptionAdd', $rcustomer_id);
