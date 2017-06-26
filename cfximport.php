@@ -7,7 +7,7 @@
    *                                    |___/
    * @package cfximport
    * @author Keppler IT GmbH <info@liveconfig.com>
-   * @copyright Copyright (c) 2009-2016 Keppler IT GmbH.
+   * @copyright Copyright (c) 2009-2017 Keppler IT GmbH.
    * @version 1.9
    * --------------------------------------------------------------------------
    * DIESE SOFTWARE WIRD "WIE SIE IST" UND AUSDRUECKLICH OHNE JEGLICHE
@@ -94,6 +94,8 @@
    *                   Entweder suphp, fcgi oder modphp, default: suphp
    * --verbose         Ausfuehrlichere Informationen waehrend des Imports ausgeben
    * --ignore=<Liste>  ignoriere die angegebenen Vertragsnamen (Komma-getrennt)
+   * --permissive      beim Import von Kontaktdaten nicht auf Duplikate prüfen
+   *                   und Eingabefehler (z.B. Ort/PLZ vertauscht) ignorieren
    *
    * DEBUG=1 schaltet zusaetzliche Debugausgaben an
    *
@@ -145,7 +147,7 @@
   }
 
   # Parsen der angegebenen Optionen und Parameter
-  $OPTS = parseParameters(array('h', 'help', 'check', 'c', 'config', 'a', 'all', 'i', 'importlocked', 'importplans', 'kdnr', 'fixmailquota', 'mergemailaddr', 'php', 'verbose', 'ignore'));
+  $OPTS = parseParameters(array('h', 'help', 'check', 'c', 'config', 'a', 'all', 'i', 'importlocked', 'importplans', 'kdnr', 'fixmailquota', 'mergemailaddr', 'php', 'verbose', 'ignore', 'permissive'));
   $action = 'import';
 
   foreach ($OPTS as $key => $value) {
@@ -1453,6 +1455,7 @@
   # _setContactAddData {
   #-------------------------------------
   function _setContactAddData ($contact) {
+    global $OPTS;
 
     $firstname = $contact['firstname'];
     $lastname = $contact['name'];
@@ -1479,6 +1482,7 @@
     if ($land == '' || "Deutschland") {
         $land = 'DE';
     }
+
     $contactdata = array (
                         'salutation' => $salutation,
                         'firstname'  => $firstname,
@@ -1492,6 +1496,8 @@
                         'fax'        => $contact['fax'],
                         'email'      => $contact['emailadresse'],
                        );
+
+    if ($OPTS['permissive']) $contactdata['permissive'] = true;
 
     return($contactdata);
   } 
@@ -1608,10 +1614,12 @@ Verwendung: php cfximport.php -c | -h | --check
                     Entweder suphp, fcgi oder modphp, default: suphp
   --verbose         Ausfuehrlichere Informationen waehrend des Imports ausgeben
   --ignore=<Liste>  ignoriere die angegebenen Vertragsnamen (Komma-getrennt)
+  --permissive      beim Import von Kontaktdaten nicht auf Duplikate prüfen
+                    und Eingabefehler (z.B. Ort/PLZ vertauscht) ignorieren
 
 ANLEITUNG UND NEUESTE VERSION: https://github.com/LiveConfig/cfximport
 ______________________________________________________________________________
-Copyright (c) 2009-2016 Keppler IT GmbH.             http://www.liveconfig.com
+Copyright (c) 2009-2017 Keppler IT GmbH.             http://www.liveconfig.com
 
 EOT;
 # '
