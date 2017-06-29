@@ -147,7 +147,7 @@
   }
 
   # Parsen der angegebenen Optionen und Parameter
-  $OPTS = parseParameters(array('h', 'help', 'check', 'c', 'config', 'a', 'all', 'i', 'importlocked', 'importplans', 'kdnr', 'fixmailquota', 'mergemailaddr', 'php', 'verbose', 'ignore', 'permissive'));
+  $OPTS = parseParameters(array('h', 'help', 'check', 'c', 'config', 'a', 'all', 'i', 'importlocked', 'importplans', 'kdnr', 'fixmailquota', 'mergemailaddr', 'php', 'verbose', 'ignore', 'permissive', 'htdocs'));
   $action = 'import';
 
   foreach ($OPTS as $key => $value) {
