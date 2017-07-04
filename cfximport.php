@@ -912,20 +912,23 @@
               $sql = "SELECT pop3 FROM email_forward WHERE email_ident=" . $row['ident'];
               $res2 = mysql_query($sql);
               while ($row2 = mysql_fetch_assoc($res2)) {
-                $addr = trim($row2['pop3']);  # Confixx erlaubt führende Leerzeichen bei Weiterleitungs-Zielen %-|
-                if (!strstr($addr, '@')) {
-                  # lokales Postfach: Standard-Domain anfügen
-                  $addr .= '@' . $stddomain;
-                }
-                # Confixx erlaubt Weiterleitungsziele im Format "Name <name@example.com>", LC nicht
-                elseif( preg_match('/.*<(.+)>$/', $addr, $addr_matches) === 1 ){
-                  $addr = $addr_matches[1];
-                }
-                # Confixx erlaubt nicht standard-konforme Zeichen wie z.B. Leerzeichen und Tabulatoren, filtere diese
-                $addr = filter_var($addr, FILTER_SANITIZE_EMAIL);
-                # Confixx erlaubt scheinbar doppelte Ziele. LC nicht. Also entferne Duplikate:
-                if( ! in_array($addr, $dest) ){
-                  array_push($dest, $addr);
+                # Confixx erlaubt mehrere Empfängeradressen durch Semikolon getrennt - also mit explode() aufteilen:
+                foreach (explode(';', $row2['pop3']) as $addr) {
+                  $addr = trim($addr);  # Confixx erlaubt führende Leerzeichen bei Weiterleitungs-Zielen %-|
+                  if (!strstr($addr, '@')) {
+                    # lokales Postfach: Standard-Domain anfügen
+                    $addr .= '@' . $stddomain;
+                  }
+                  # Confixx erlaubt Weiterleitungsziele im Format "Name <name@example.com>", LC nicht
+                  elseif( preg_match('/.*<(.+)>$/', $addr, $addr_matches) === 1 ){
+                    $addr = $addr_matches[1];
+                  }
+                  # Confixx erlaubt nicht standard-konforme Zeichen wie z.B. Leerzeichen und Tabulatoren, filtere diese
+                  $addr = filter_var($addr, FILTER_SANITIZE_EMAIL);
+                  # Confixx erlaubt scheinbar doppelte Ziele. LC nicht. Also entferne Duplikate:
+                  if( ! in_array($addr, $dest) ){
+                    array_push($dest, $addr);
+                  }
                 }
               }
               mysql_free_result($res2);
