@@ -1500,7 +1500,7 @@
                         'email'      => $contact['emailadresse'],
                        );
 
-    if ($OPTS['permissive']) $contactdata['permissive'] = true;
+    if (isset($OPTS['permissive']) && $OPTS['permissive']) $contactdata['permissive'] = true;
 
     return($contactdata);
   } 
